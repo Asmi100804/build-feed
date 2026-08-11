@@ -8,7 +8,9 @@ import {
   json,
   uniqueIndex,
   index,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ============= PRODUCTS =============
 export const products = pgTable(
@@ -45,5 +47,28 @@ export const products = pgTable(
     organizationIdx: index("products_organization_idx").on(
       table.organizationId
     ),
+  })
+);
+
+// ============= VOTES =============
+export const votes = pgTable(
+  "votes",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    value: integer("value").notNull(), // 1 for upvote, -1 for downvote
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userProductIdx: uniqueIndex("votes_user_product_idx").on(
+      table.userId,
+      table.productId
+    ),
+    productIdx: index("votes_product_idx").on(table.productId),
+    valueCheck: check("votes_value_check", sql`${table.value} IN (1, -1)`),
   })
 );

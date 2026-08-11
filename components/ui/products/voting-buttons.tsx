@@ -8,33 +8,56 @@ import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 
+type UserVote = 1 | -1 | null;
+
+type OptimisticVoteState = {
+  voteCount: number;
+  userVote: UserVote;
+};
+
+const getNextVoteState = (
+  currentState: OptimisticVoteState,
+  selectedVote: Exclude<UserVote, null>
+): OptimisticVoteState => {
+  const nextUserVote =
+    currentState.userVote === selectedVote ? null : selectedVote;
+
+  return {
+    userVote: nextUserVote,
+    voteCount:
+      currentState.voteCount -
+      (currentState.userVote ?? 0) +
+      (nextUserVote ?? 0),
+  };
+};
+
 export default function VotingButtons({
-  hasVoted,
+  userVote,
   voteCount: initialVoteCount,
   productId,
 }: {
-  hasVoted?: boolean;
+  userVote: UserVote;
   voteCount: number;
   productId: number;
 }) {
-  const [optimisticVoteCount, setOptimisticVoteCount] = useOptimistic(
-    initialVoteCount,
-    (currentCount, change: number) => Math.max(0, currentCount + change)
+  const [optimisticVoteState, setOptimisticVoteState] = useOptimistic(
+    { voteCount: initialVoteCount, userVote },
+    getNextVoteState
   );
 
   const [isPending, startTransition] = useTransition();
 
-  const handleUpvote = async () => {
+  const handleVote = (selectedVote: Exclude<UserVote, null>) => {
     startTransition(async () => {
-      setOptimisticVoteCount(1);
-      await upvoteProductAction(productId);
-    });
-  };
+      setOptimisticVoteState(selectedVote);
+      const result =
+        selectedVote === 1
+          ? await upvoteProductAction(productId)
+          : await downvoteProductAction(productId);
 
-  const handleDownvote = async () => {
-    startTransition(async () => {
-      setOptimisticVoteCount(-1);
-      await downvoteProductAction(productId);
+      if (!result.success) {
+        console.error(result.message);
+      }
     });
   };
 
@@ -47,31 +70,35 @@ export default function VotingButtons({
       }}
     >
       <Button
-        onClick={handleUpvote}
+        onClick={() => handleVote(1)}
         variant="ghost"
         size="icon-sm"
         className={cn(
-          "h-8 w-8 text-primary ",
-          hasVoted
-            ? "bg-primary/10 text-primary hover:bg-primary/20"
-            : "hover:bg-primary/10 hover:text-primary"
+          "h-8 w-8 text-primary hover:bg-primary/10 hover:text-primary",
+          optimisticVoteState.userVote === 1 &&
+            "bg-primary/10 text-primary hover:bg-primary/20"
         )}
         disabled={isPending}
+        aria-pressed={optimisticVoteState.userVote === 1}
+        aria-label="Upvote product"
       >
         <ChevronUpIcon className="size-5" />
       </Button>
       <span className="text-sm font-semibold transition-colors text-foreground">
-        {optimisticVoteCount}
+        {optimisticVoteState.voteCount}
       </span>
       <Button
-        onClick={handleDownvote}
+        onClick={() => handleVote(-1)}
         variant="ghost"
         size="icon-sm"
         disabled={isPending}
         className={cn(
-          "h-8 w-8 text-primary ",
-          hasVoted ? "hover:text-destructive" : "opacity-50 cursor-not-allowed"
+          "h-8 w-8 text-primary hover:bg-destructive/10 hover:text-destructive",
+          optimisticVoteState.userVote === -1 &&
+            "bg-destructive/10 text-destructive hover:bg-destructive/20"
         )}
+        aria-pressed={optimisticVoteState.userVote === -1}
+        aria-label="Downvote product"
       >
         <ChevronDownIcon className="size-5" />
       </Button>

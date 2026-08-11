@@ -5,9 +5,9 @@ CREATE TABLE "votes" (
 	"value" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
-	CONSTRAINT "votes_value_check" CHECK ("votes"."value" IN (1, -1))
+	CONSTRAINT "votes_value_check" CHECK ("value" IN (1, -1))
 );
 --> statement-breakpoint
-ALTER TABLE "votes" ADD CONSTRAINT "votes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "votes_user_product_idx" ON "votes" ("user_id","product_id");--> statement-breakpoint
-CREATE INDEX "votes_product_idx" ON "votes" ("product_id");
+CREATE INDEX "votes_product_idx" ON "votes" ("product_id");--> statement-breakpoint
+ALTER TABLE "votes" ADD CONSTRAINT "votes_product_id_products_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE;

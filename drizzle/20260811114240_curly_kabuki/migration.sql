@@ -1,3 +1,6 @@
+-- Current sql file was generated after introspecting the database
+-- If you want to run this migration please uncomment this code before executing migrations
+/*
 CREATE TABLE "products" (
 	"id" serial PRIMARY KEY,
 	"name" varchar(120) NOT NULL,
@@ -15,6 +18,7 @@ CREATE TABLE "products" (
 	"organization_id" varchar(255)
 );
 --> statement-breakpoint
+CREATE INDEX "products_organization_idx" ON "products" ("organization_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "products_slug_idx" ON "products" ("slug");--> statement-breakpoint
-CREATE INDEX "products_status_idx" ON "products" ("status");--> statement-breakpoint
-CREATE INDEX "products_organization_idx" ON "products" ("organization_id");
+CREATE INDEX "products_status_idx" ON "products" ("status");
+*/

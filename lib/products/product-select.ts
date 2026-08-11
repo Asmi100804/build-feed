@@ -1,7 +1,6 @@
 import { db } from "@/db";
 import { products, votes } from "@/db/schema";
 import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
-import { connection } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { ProductType, UserVote } from "@/types";
 
@@ -68,7 +67,6 @@ export async function getAllProducts() {
 }
 
 export async function getRecentlyLaunchedProducts() {
-  await connection(); //as it is dynamic and needs to be rendered everytime
   const productsData = await getAllProducts();
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

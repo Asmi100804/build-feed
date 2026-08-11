@@ -7,4 +7,7 @@ export type FormState = {
   message: string;
 };
 
-export type ProductType = InferSelectModel<typeof products>;
+export type UserVote = 1 | -1 | null;
+export type ProductType = InferSelectModel<typeof products> & {
+  userVote: UserVote;
+};

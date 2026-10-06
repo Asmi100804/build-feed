@@ -1,8 +1,7 @@
 import { ProductType } from "@/types";
-import { Trash2Icon } from "lucide-react";
 import { Badge } from "../badge";
-import { Button } from "../button";
 import { Card, CardDescription, CardFooter, CardTitle } from "../card";
+import DeleteProductButton from "./delete-product-button";
 import AdminActions from "./admin-actions";
 import { cn } from "@/lib/utils";
 
@@ -21,11 +20,11 @@ export default function AdminProductCard({
             <Badge
               className={cn(
                 product.status === "pending" &&
-                  "bg-yellow-600/10 text-yellow-600 border-yellow-600",
+                "bg-yellow-600/10 text-yellow-600 border-yellow-600",
                 product.status === "approved" &&
-                  "bg-green-500/10 text-green-600 border-green-500",
+                "bg-green-500/10 text-green-600 border-green-500",
                 product.status === "rejected" &&
-                  "bg-red-500/10 text-red-500 border-red-500"
+                "bg-red-500/10 text-red-500 border-red-500"
               )}
             >
               {product.status}
@@ -47,10 +46,10 @@ export default function AdminProductCard({
               <p>
                 {product.createdAt
                   ? new Intl.DateTimeFormat("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    }).format(new Date(product.createdAt?.toISOString() ?? ""))
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }).format(new Date(product.createdAt?.toISOString() ?? ""))
                   : ""}
               </p>
               <p>
@@ -65,10 +64,7 @@ export default function AdminProductCard({
             </div>
           </CardDescription>
           <CardFooter>
-            <Button variant="outline">
-              <Trash2Icon className="size-4" />
-              Delete
-            </Button>
+            <DeleteProductButton productId={product.id} productName={product.name} />
           </CardFooter>
         </div>
         <div className="lg:shrink-0">

@@ -1,106 +1,80 @@
 "use client";
-import {
-  downvoteProductAction,
-  upvoteProductAction,
-} from "@/lib/products/product-actions";
-import { cn } from "@/lib/utils";
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
-import { useOptimistic, useTransition } from "react";
+
+import { useState } from "react";
+import { ChevronUpIcon, ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { upvoteProductAction, downvoteProductAction } from "@/lib/products/product-actions"; 
 
-type UserVote = 1 | -1 | null;
-
-type OptimisticVoteState = {
-  voteCount: number;
-  userVote: UserVote;
-};
-
-const getNextVoteState = (
-  currentState: OptimisticVoteState,
-  selectedVote: Exclude<UserVote, null>
-): OptimisticVoteState => {
-  const nextUserVote =
-    currentState.userVote === selectedVote ? null : selectedVote;
-
-  return {
-    userVote: nextUserVote,
-    voteCount:
-      currentState.voteCount -
-      (currentState.userVote ?? 0) +
-      (nextUserVote ?? 0),
-  };
+type VotingButtonsProps = {
+  productId: number;
+  voteCount?: number | null;
+  userVote?: 1 | -1 | null;
+  onError?: (message: string) => void;
 };
 
 export default function VotingButtons({
-  userVote,
-  voteCount: initialVoteCount,
   productId,
-}: {
-  userVote: UserVote;
-  voteCount: number;
-  productId: number;
-}) {
-  const [optimisticVoteState, setOptimisticVoteState] = useOptimistic(
-    { voteCount: initialVoteCount, userVote },
-    getNextVoteState
-  );
+  voteCount: initialVoteCount = 0,
+  userVote: initialUserVote = null,
+  onError,
+}: VotingButtonsProps) {
+  const [votes, setVotes] = useState(initialVoteCount ?? 0);
+  const [currentUserVote, setCurrentUserVote] = useState(initialUserVote);
+  const [isPending, setIsPending] = useState(false);
 
-  const [isPending, startTransition] = useTransition();
+  const handleVote = async (type: "up" | "down") => {
+    if (isPending) return;
+    setIsPending(true);
 
-  const handleVote = (selectedVote: Exclude<UserVote, null>) => {
-    startTransition(async () => {
-      setOptimisticVoteState(selectedVote);
-      const result =
-        selectedVote === 1
+    try {
+      const res =
+        type === "up"
           ? await upvoteProductAction(productId)
           : await downvoteProductAction(productId);
 
-      if (!result.success) {
-        console.error(result.message);
+          
+      if (!res.success) {
+        onError?.(res.message);
+        return;
       }
-    });
+
+      if (typeof res.voteCount === "number") {
+        setVotes(res.voteCount);
+      }
+      setCurrentUserVote(res.userVote ?? null);
+    } catch {
+      onError?.("Something went wrong. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
-    <div
-      className="flex flex-col items-center gap-1 shrink-0"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-    >
+    <div className="flex flex-col items-center border rounded-lg p-1 bg-background shrink-0">
       <Button
-        onClick={() => handleVote(1)}
+        type="button"
         variant="ghost"
-        size="icon-sm"
-        className={cn(
-          "h-8 w-8 text-primary hover:bg-primary/10 hover:text-primary",
-          optimisticVoteState.userVote === 1 &&
-            "bg-primary/10 text-primary hover:bg-primary/20"
-        )}
+        size="icon"
+        className={`size-7 ${currentUserVote === 1 ? "text-primary" : ""}`}
+        onClick={() => handleVote("up")}
         disabled={isPending}
-        aria-pressed={optimisticVoteState.userVote === 1}
-        aria-label="Upvote product"
       >
-        <ChevronUpIcon className="size-5" />
+        <ChevronUpIcon className="size-4" />
       </Button>
-      <span className="text-sm font-semibold transition-colors text-foreground">
-        {optimisticVoteState.voteCount}
+
+      <span className="text-xs font-semibold px-1 min-w-[20px] text-center select-none">
+        {votes}
       </span>
+
       <Button
-        onClick={() => handleVote(-1)}
+        type="button"
         variant="ghost"
-        size="icon-sm"
+        size="icon"
+        className={`size-7 ${currentUserVote === -1 ? "text-primary" : ""}`}
+        onClick={() => handleVote("down")}
         disabled={isPending}
-        className={cn(
-          "h-8 w-8 text-primary hover:bg-destructive/10 hover:text-destructive",
-          optimisticVoteState.userVote === -1 &&
-            "bg-destructive/10 text-destructive hover:bg-destructive/20"
-        )}
-        aria-pressed={optimisticVoteState.userVote === -1}
-        aria-label="Downvote product"
       >
-        <ChevronDownIcon className="size-5" />
+        <ChevronDownIcon className="size-4" />
       </Button>
     </div>
   );

@@ -1,12 +1,12 @@
-
 import SectionHeader from "@/components/ui/common/section-header";
-import VotingButtons from "@/components/ui/products/voting-buttons";
+import ProductSupportCard from "@/components/ui/products/product-support-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  getFeaturedProducts,
+  getApprovedProductSlugs,
   getProductBySlug,
 } from "@/lib/products/product-select";
+import { Suspense } from "react";
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -18,17 +18,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const generateStaticParams = async () => {
-  const products = await getFeaturedProducts();
-  return products.map((product) => ({
-    slug: product.slug.toString(),
-  }));
+  const slugs = await getApprovedProductSlugs();
+  return slugs.map((slug) => ({ slug: slug.toString() }));
 };
 
-export default async function Product({
+export default function ProductPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  return (
+    <Suspense fallback={<div className="py-16 wrapper">Loading...</div>}>
+      <Product params={params} />
+    </Suspense>
+  );
+}
+
+async function Product({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   const product = await getProductBySlug(slug);
@@ -103,27 +109,17 @@ export default async function Product({
               </div>
             </div>
           </div>
+
+          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              <div className="border rounded-lg p-6 bg-background">
-                <div className="text-center mb-6">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Support this product
-                  </p>
-                  <VotingButtons
-                    productId={product.id}
-                    userVote={product.userVote}
-                    voteCount={voteCount}
-                  />
-                </div>
-                {voteCount > 100 && (
-                  <div className="pt-6 border-t">
-                    <Badge className="w-full justify-center py-2">
-                      🔥 Featured Product
-                    </Badge>
-                  </div>
-                )}
-              </div>
+              {/* Product Support & Voting Block */}
+              <ProductSupportCard
+                productId={product.id}
+                userVote={product.userVote}
+                voteCount={voteCount}
+              />
+
               {websiteUrl && (
                 <Button
                   asChild

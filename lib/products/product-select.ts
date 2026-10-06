@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { products, votes } from "@/db/schema";
-import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gt, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { ProductType, UserVote } from "@/types";
 
@@ -22,6 +22,22 @@ const normalizeProducts = <T extends { userVote: number | null }>(
     userVote: product.userVote as UserVote,
   })) as unknown as ProductType[];
 
+// Auth-free query for build time (generateStaticParams has no request,
+// so calling auth()/headers() there throws).
+export async function getApprovedProductSlugs() {
+  const rows = await db
+    .select({ slug: products.slug })
+    .from(products)
+    .where(eq(products.status, "approved"))
+    .orderBy(desc(products.voteCount));
+
+  return rows.map((row) => row.slug);
+}
+
+// Same threshold the UI uses for the "Featured" badge (voteCount > 100)
+export const FEATURED_MIN_VOTES = 100;
+const FEATURED_LIMIT = 6;
+
 export async function getFeaturedProducts() {
   const userId = await withCurrentUserVote();
   const productsData = await db
@@ -31,8 +47,14 @@ export async function getFeaturedProducts() {
       votes,
       and(eq(votes.productId, products.id), eq(votes.userId, userId ?? ""))
     )
-    .where(eq(products.status, "approved"))
-    .orderBy(desc(products.voteCount));
+    .where(
+      and(
+        eq(products.status, "approved"),
+        gt(products.voteCount, FEATURED_MIN_VOTES)
+      )
+    )
+    .orderBy(desc(products.voteCount))
+    .limit(FEATURED_LIMIT);
 
   return normalizeProducts(productsData);
 }

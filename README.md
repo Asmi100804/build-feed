@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 BuildFeed
 
-## Getting Started
+A community-driven launch platform where makers, developers, and startups can showcase what they've built and get discovered by an audience that genuinely cares about new products.
 
-First, run the development server:
+Makers can submit their apps, AI tools, SaaS products, and side projects, while the community upvotes or downvotes them in real time. The most loved products rise to the **Featured Today** spotlight on the home page, and everything else stays easy to explore in a searchable directory. Every submission goes through an admin review before going live, keeping the feed authentic, high-quality, and spam-free.
+
+![home](public/screenshots/bf-home.png)
+
+## ✨ Features
+
+- 🌟 **Featured Today** – top products (100+ votes) on the home page
+- 👍 **Voting** – upvote / downvote with optimistic UI (sign-in required)
+- 🔍 **Explore** – browse all approved products
+- 📝 **Submit a product** – signed-in organization members can submit products
+- 🛡️ **Admin panel** – approve or reject pending products
+- 🔐 **Auth** – Clerk (sign in, sign up, organizations)
+
+## 📸 Screenshots
+
+| Explore | Product Details |
+| :---: | :---: |
+| ![Explore](public/screenshots/bf-explore.png) | ![Product](public/screenshots/bf-detail.png) |
+
+| Submit Product | Admin Panel |
+| :---: | :---: |
+| ![Submit](public/screenshots/bf-submit.png) | ![Admin](public/screenshots/bf-admin.png) |
+
+## 🛠️ Tech Stack
+
+- **Next.js 16 (App Router)** – Full-stack framework with Cache Components and Server Actions
+- **React 19** – Component-based user interface
+- **TypeScript** – Type-safe development across the project
+- **Tailwind CSS 4** – Utility-first styling
+- **shadcn/ui** – Accessible, reusable UI components
+- **Clerk** – Authentication, organizations, and admin roles
+- **Neon (PostgreSQL)** – Serverless cloud database
+- **Drizzle ORM** – Type-safe queries, schema, and migrations
+- **Zod** – Validation for forms and server actions
+- **Lucide React** – Icon set
+
+## ⚙️ Getting Started
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Add environment variables (see below) in .env
+
+# 3. Push the schema to the database
+npx drizzle-kit push
+
+# 4. Run the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔑 Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env` file in the root:
 
-## Learn More
+```env
+DATABASE_URL=your_neon_postgres_url
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 👑 Making a user admin
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+In the Clerk dashboard, open the user → **Public metadata** and add:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```json
+{ "isAdmin": true }
+```
